@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/redis/go-redis/v9 v9.23.0
 	github.com/testcontainers/testcontainers-go/modules/redis v0.44.0
-	github.com/tonklasocute/go-ratelimit v0.0.0-00010101000000-000000000000
-	github.com/tonklasocute/go-ratelimit/store/redis v0.0.0-00010101000000-000000000000
+	github.com/tonklasocute/go-ratelimit v0.1.0
+	github.com/tonklasocute/go-ratelimit/store/redis v0.1.0
 )
 
 require (

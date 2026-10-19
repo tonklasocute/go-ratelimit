@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/gofiber/fiber/v3 v3.6.1
-	github.com/tonklasocute/go-ratelimit v0.0.0-00010101000000-000000000000
+	github.com/tonklasocute/go-ratelimit v0.1.0
 )
 
 require (
