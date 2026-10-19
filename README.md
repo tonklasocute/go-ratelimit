@@ -307,9 +307,34 @@ runs the full path; sliding log uses 1000/s.
 | GCRA | 11.9 ns | 88.3 ns | 17.9 ns | 207 ns | 0 |
 | Two rules (GCRA + sliding window), parallel | | | 26.5 ns | | 0 |
 
-Redis numbers depend on the network more than on the algorithm. Measure them
-against your own Redis with `REDIS_ADDR=host:6379 make bench-redis`, or with
-Docker, which starts a container.
+**Redis store.** The client ran in a Linux container (go1.26.9) on the same
+Docker network as `redis:7-alpine` (7.4.11). Both ran under Docker Desktop
+29.8.0 on the M1 (8 vCPUs). "Server" is the time Redis spent executing the
+script per check, read from `INFO commandstats`; the rest is the round trip.
+Parallel runs use 8 goroutines, each with its own key, over the default
+go-redis connection pool.
+
+| Algorithm | Serial | Server | Parallel (8 goroutines) | Server | Allocs |
+|---|---|---|---|---|---|
+| Fixed window | 86.3 µs | 19.5 µs | 21.3 µs | 11.8 µs | 18–19 |
+| Sliding log | 81.4 µs | 18.9 µs | 23.3 µs | 13.9 µs | 18 |
+| Sliding window | 78.6 µs | 18.1 µs | 22.3 µs | 12.7 µs | 19 |
+| Token bucket | 81.5 µs | 18.7 µs | 21.2 µs | 12.0 µs | 18 |
+| Leaky bucket | 73.0 µs | 16.7 µs | 21.2 µs | 11.9 µs | 18 |
+| GCRA | 73.2 µs | 16.1 µs | 20.7 µs | 11.2 µs | 18 |
+
+- **The network dominates.** The script runs in 11–20 µs, and the algorithm
+  barely matters. Most of the serial time is the round trip through Docker's
+  virtual network.
+- **Throughput:** one process sustained about 47 000 checks/s with 8
+  goroutines.
+- **Allocations** come from go-redis building and parsing the command.
+- **From macOS:** run on macOS against the container through Docker
+  Desktop's port forwarding, the serial time rises to 154–182 µs. The server
+  time is unchanged.
+
+Measure against your own Redis with `REDIS_ADDR=host:6379 make bench-redis`,
+or let the benchmark start a container with Docker.
 
 ## Comparison with other libraries
 
