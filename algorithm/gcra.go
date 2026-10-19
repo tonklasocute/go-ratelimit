@@ -23,7 +23,7 @@ import "time"
 //
 // The TAT running ahead of now by at most the tolerance is exactly a token
 // bucket (and a leaky bucket meter) with capacity Burst, stored as a single
-// number. It is the algorithm used by redis_rate, throttled and Stripe.
+// number. go-redis/redis_rate and throttled use it too.
 //
 // Memory per key: one timestamp (8 bytes), the smallest of all algorithms.
 //
