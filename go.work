@@ -3,6 +3,7 @@ go 1.26.0
 use (
 	.
 	./middleware/chi
+	./middleware/echo
 	./middleware/gin
 	./store/redis
 	./store/redis/integration
