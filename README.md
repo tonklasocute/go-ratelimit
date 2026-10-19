@@ -159,12 +159,59 @@ lim, err := ratelimit.New(ratelimit.PerSecond(100),
   keeps all rules of a key in one slot.
 - **Self-cleaning.** Keys expire when the state is fresh again.
 
+#### Proof: two instances, one limit
+
 The distributed example ([examples/distributed](examples/distributed)) runs
-two app instances behind one Redis, with a k6 script that checks the shared
-limit holds:
+two app instances that share one Redis. Each instance is configured with
+**20 req/s per API key, burst 20**. k6 sends **60 req/s for 20 s** with one
+API key and alternates between the instances. If the limit were per
+instance, about 40 req/s would get through. With the shared limit, 20 req/s
+should get through, split between the two instances.
+
+```text
+Shared rate limit across 2 instances
+  configured        20 req/s per API key, burst 20
+  offered           1201 requests in 20s (60 req/s)
+  allowed           420  (app1 209, app2 211)
+  rejected (429)    781
+  expected allowed  ≈ 420 (burst + limit × duration)
+  sustained rate    20.00 req/s after the burst
+  thresholds        passed
+```
+
+Per second, both instances together allow exactly 20, about 10 each:
+
+```text
+second   app1   app2  allowed  rejected
+0          19     17       36        14   ← burst of 20 + 16 refilled
+1          10     10       20        40
+2          10     10       20        40
+⋮
+13         10     10       20        40
+14          9     11       20        40
+15         10     10       20        40
+16          9     11       20        40
+17         10     10       20        40
+18         10     10       20        40
+19         11      9       20        40
+20          1      3        4         7   ← partial second
+total                     420       781
+```
+
+Every whole second from 1 to 19 allowed 20 requests in total. The allowed
+total matches `burst + limit × duration` = 20 + 20 × 20 = 420 exactly. The
+seconds are wall-clock seconds, so the first and last are partial.
+
+A second run gave the same total of 420 (app1 208, app2 212). That time the
+burst spread over seconds 0 and 1 (21 and 25), because the test started late
+in a wall-clock second, and every later whole second again allowed exactly
+20. Both runs used Docker Desktop 29.8.0 on an Apple M1, Redis 7.4.11 and
+k6 1.3.0.
+Reproduce it with:
 
 ```sh
-make compose
+make compose                         # builds, runs k6, prints the summary
+examples/distributed/per-second.sh   # per-second table from results/k6.csv
 ```
 
 ## Middleware
