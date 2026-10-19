@@ -43,11 +43,15 @@ svg{--surface:#fcfcfb;--text:#0b0b0b;--muted:#52514e;--grid:#e6e5e0;--allowed:#2
 .limit{stroke:var(--muted);stroke-width:1;stroke-dasharray:5 4}
 text{font-size:11px}.title{font-size:15px;font-weight:600}.sub{font-size:12px}`
 
-func xOf(d time.Duration) float64 { return left + float64(d)/float64(duration)*plotW }
+// The explicit float64 conversions round each product before it is added,
+// which stops the compiler from fusing them into FMA instructions on arm64.
+// Without them the charts differ in the last digit between arm64 and amd64.
 
-func yBar(v float64) float64 { return barBottom - v/barMax*(barBottom-barTop) }
+func xOf(d time.Duration) float64 { return left + float64(float64(d)/float64(duration)*plotW) }
 
-func yLine(v float64) float64 { return lineBottom - v/lineMax*(lineBottom-lineTop) }
+func yBar(v float64) float64 { return barBottom - float64(v/barMax*(barBottom-barTop)) }
+
+func yLine(v float64) float64 { return lineBottom - float64(v/lineMax*(lineBottom-lineTop)) }
 
 // render draws one algorithm's chart.
 func render(id algorithm.ID, reqs []time.Duration, allowed []bool, s stats) string {
@@ -103,7 +107,7 @@ func render(id algorithm.ID, reqs []time.Duration, allowed []bool, s stats) stri
 		if ok[i]+denied[i] == 0 {
 			continue
 		}
-		x := left + float64(i)*binW + 1
+		x := left + float64(float64(i)*binW) + 1
 		w := binW - 2
 		p(`<g><title>%.1f–%.1fs: %d allowed, %d denied</title>`, float64(i)/10, float64(i+1)/10, ok[i], denied[i])
 		top := float64(barBottom)
