@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # Each module is tested on its own; replace directives point at the
+  # sibling modules, so the workspace file is not needed (and requires a
+  # newer Go than the core's minimum).
+  GOWORK: "off"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [., store/redis, store/redis/integration, middleware/chi, middleware/gin, middleware/echo, middleware/fiber, middleware/grpc, examples]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+          working-directory: ${{ matrix.module }}
+
+  core:
+    name: core (Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.22", stable]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
+      - run: go vet ./...
+      - run: go test -race -coverpkg=./... -coverprofile=coverage.out ./...
+      - name: Coverage
+        run: go tool cover -func=coverage.out | tail -1
+      - name: Charts are up to date
+        if: matrix.go == 'stable'
+        run: go run ./cmd/visualize > /dev/null && git diff --exit-code docs/img
+      - uses: codecov/codecov-action@v7
+        if: matrix.go == 'stable'
+        with:
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  modules:
+    name: ${{ matrix.module }} (Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [store/redis, middleware/chi, middleware/gin, middleware/echo, middleware/fiber, middleware/grpc, examples]
+        go: [min, stable]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          # "min" is the go directive of the module's go.mod.
+          go-version: ${{ matrix.go == 'stable' && 'stable' || '' }}
+          go-version-file: ${{ matrix.go == 'min' && format('{0}/go.mod', matrix.module) || '' }}
+      - working-directory: ${{ matrix.module }}
+        run: |
+          go vet ./...
+          go test -race ./...
+
+  redis-integration:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 2s --health-retries 15
+    env:
+      REDIS_ADDR: localhost:6379
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: store/redis/integration/go.mod
+      - working-directory: store/redis/integration
+        run: |
+          go test -race -v ./...
+          go test -run '^$' -bench . -benchmem -benchtime 2000x ./...
