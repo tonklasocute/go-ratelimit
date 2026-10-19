@@ -6,6 +6,7 @@ use (
 	./middleware/echo
 	./middleware/fiber
 	./middleware/gin
+	./middleware/grpc
 	./store/redis
 	./store/redis/integration
 )
