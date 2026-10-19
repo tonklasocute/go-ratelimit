@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/tonklasocute/go-ratelimit/actions/workflows/ci.yml/badge.svg)](https://github.com/tonklasocute/go-ratelimit/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/tonklasocute/go-ratelimit.svg)](https://pkg.go.dev/github.com/tonklasocute/go-ratelimit)
-[![Go Report Card](https://goreportcard.com/badge/github.com/tonklasocute/go-ratelimit)](https://goreportcard.com/report/github.com/tonklasocute/go-ratelimit)
+[![Release](https://img.shields.io/github/v/release/tonklasocute/go-ratelimit)](https://github.com/tonklasocute/go-ratelimit/releases)
+[![Go version](https://img.shields.io/github/go-mod/go-version/tonklasocute/go-ratelimit)](go.mod)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/tonklasocute/go-ratelimit/badges/coverage.json)](https://github.com/tonklasocute/go-ratelimit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
