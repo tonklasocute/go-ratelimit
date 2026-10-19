@@ -16,7 +16,9 @@ import (
 	redisstore "github.com/tonklasocute/go-ratelimit/store/redis"
 )
 
-func main() {
+func main() { log.Fatal(run()) }
+
+func run() error {
 	instance := getenv("INSTANCE", "app")
 	rdb := redis.NewClient(&redis.Options{Addr: getenv("REDIS_ADDR", "localhost:6379")})
 	defer rdb.Close()
@@ -30,7 +32,7 @@ func main() {
 		}),
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	mux := http.NewServeMux()
@@ -42,7 +44,7 @@ func main() {
 
 	srv := &http.Server{Addr: ":8080", Handler: handler, ReadHeaderTimeout: 5 * time.Second}
 	log.Printf("%s listening on :8080", instance)
-	log.Fatal(srv.ListenAndServe())
+	return srv.ListenAndServe()
 }
 
 func getenv(k, def string) string {

@@ -48,6 +48,7 @@ func do(t *testing.T, app *fiber.App, path string, mod func(*http.Request)) resp
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 	return response{res.StatusCode, res.Header, string(body)}
 }

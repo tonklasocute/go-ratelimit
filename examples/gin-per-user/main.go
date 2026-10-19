@@ -22,30 +22,37 @@ import (
 // plans maps users to plans. A real app would read this from its database.
 var plans = map[string]string{"alice": "free", "bob": "pro"}
 
-func main() {
+func main() { log.Fatal(run()) }
+
+func run() error {
 	store := memory.New()
 	defer store.Close()
 
 	// Each plan combines a short burst rule and an hourly quota. The rule
 	// names keep the plans' counters apart in the shared store.
-	newPlan := func(name string, perSecond, perHour int) gin.HandlerFunc {
+	newPlan := func(name string, perSecond, perHour int) (gin.HandlerFunc, error) {
 		lim, err := ratelimit.NewComposite([]ratelimit.Rule{
 			{Name: name + "_burst", Rate: ratelimit.PerSecond(perSecond)},
 			{Name: name + "_hourly", Rate: ratelimit.PerHour(perHour), Algorithm: ratelimit.SlidingWindow},
 		}, ratelimit.WithStore(store))
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
-		return rlgin.New(lim, rlgin.WithKeyFunc(rlgin.KeyByContextValue("user")), rlgin.WithJSONBody())
+		return rlgin.New(lim, rlgin.WithKeyFunc(rlgin.KeyByContextValue("user")), rlgin.WithJSONBody()), nil
 	}
-	limits := map[string]gin.HandlerFunc{
-		"free": newPlan("free", 2, 100),
-		"pro":  newPlan("pro", 20, 10_000),
+	free, err := newPlan("free", 2, 100)
+	if err != nil {
+		return err
 	}
+	pro, err := newPlan("pro", 20, 10_000)
+	if err != nil {
+		return err
+	}
+	limits := map[string]gin.HandlerFunc{"free": free, "pro": pro}
 
 	anonymous, err := ratelimit.New(ratelimit.PerMinute(10), ratelimit.WithName("anonymous"), ratelimit.WithStore(store))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	limitAnonymous := rlgin.New(anonymous, rlgin.WithJSONBody())
 
@@ -61,7 +68,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"items": []string{"a", "b"}, "user": c.GetString("user")})
 	})
 
-	log.Fatal(r.Run(":8080"))
+	return r.Run(":8080")
 }
 
 // authenticate is a stand-in for real authentication: "Bearer <user>".

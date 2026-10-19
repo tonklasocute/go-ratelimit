@@ -14,14 +14,16 @@ import (
 	"github.com/tonklasocute/go-ratelimit/store/memory"
 )
 
-func main() {
+func main() { log.Fatal(run()) }
+
+func run() error {
 	store := memory.New()
 	defer store.Close()
 
 	// 5 requests per second per IP, bursts of up to 5.
 	lim, err := ratelimit.New(ratelimit.PerSecond(5), ratelimit.WithStore(store))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	mux := http.NewServeMux()
@@ -39,5 +41,5 @@ func main() {
 
 	srv := &http.Server{Addr: ":8080", Handler: handler, ReadHeaderTimeout: 5 * time.Second}
 	log.Println("listening on :8080")
-	log.Fatal(srv.ListenAndServe())
+	return srv.ListenAndServe()
 }

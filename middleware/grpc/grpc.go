@@ -190,7 +190,7 @@ func (l *limiter) check(ctx context.Context, fullMethod string, setHeader func(m
 	}
 	md := metadata.MD{}
 	l.hw.Write(func(name, value string) { md.Set(strings.ToLower(name), value) }, res, l.cfg.now())
-	setHeader(md) // fails only if headers were already sent; nothing to do then
+	_ = setHeader(md) // fails only if headers were already sent; nothing to do then
 	if !res.Allowed {
 		return l.cfg.deny(ctx, res)
 	}
