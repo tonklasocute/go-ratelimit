@@ -127,6 +127,8 @@ func Peek(id ID, st *State, p Params, now int64, n int64) Decision {
 		return slidingLogPeek(st, p, now, n)
 	case SlidingWindow:
 		return slidingWindowPeek(st, p, now, n)
+	case TokenBucket:
+		return tokenBucketPeek(st, p, now, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
@@ -142,6 +144,8 @@ func Commit(id ID, st *State, p Params, now int64, n int64) {
 		slidingLogCommit(st, now, n)
 	case SlidingWindow:
 		slidingWindowCommit(st, n)
+	case TokenBucket:
+		tokenBucketCommit(st, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
@@ -165,7 +169,7 @@ func ceilDur(ns float64) time.Duration {
 	if ns >= math.MaxInt64 {
 		return math.MaxInt64
 	}
-	return time.Duration(math.Ceil(ns - eps))
+	return time.Duration(math.Ceil(ns - 1e-3)) // ignore float noise below 1ps
 }
 
 // floorInt converts a float count to int64, rounding down and never below 0.
