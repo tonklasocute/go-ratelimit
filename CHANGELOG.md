@@ -7,6 +7,11 @@ with the same version (see [Releasing](#releasing)).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-19
+
+First release of every module: the core (`v0.1.0`), `store/redis`, and the
+`chi`, `gin`, `echo`, `fiber` and `grpc` middleware.
+
 ### Added
 
 - Core `Limiter` interface with `Allow`, `AllowN` (n = 0 peeks) and `Reset`.
@@ -73,4 +78,5 @@ Once the tags are pushed, `go get github.com/tonklasocute/go-ratelimit/middlewar
 resolves the core at `v0.1.0` as well. Move the "Unreleased" entries under a
 new version heading in the same release commit.
 
-[Unreleased]: https://github.com/tonklasocute/go-ratelimit/commits/main
+[Unreleased]: https://github.com/tonklasocute/go-ratelimit/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/tonklasocute/go-ratelimit/releases/tag/v0.1.0
