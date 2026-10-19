@@ -50,11 +50,40 @@ jobs:
       - name: Charts are up to date
         if: matrix.go == 'stable'
         run: go run ./cmd/visualize > /dev/null && git diff --exit-code docs/img
-      - uses: codecov/codecov-action@v7
-        if: matrix.go == 'stable'
+
+  # Publishes the core coverage as a shields.io endpoint on the "badges"
+  # branch, so the README badge needs no third-party account.
+  coverage-badge:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: core
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          files: coverage.out
-          token: ${{ secrets.CODECOV_TOKEN }}
+          go-version: stable
+      - name: Measure coverage
+        id: cover
+        run: |
+          go test -coverpkg=./... -coverprofile=coverage.out ./... > /dev/null
+          pct=$(go tool cover -func=coverage.out | awk '/^total:/ {sub("%", "", $3); print $3}')
+          color=$(awk -v p="$pct" 'BEGIN { print (p >= 90) ? "brightgreen" : (p >= 80) ? "green" : (p >= 70) ? "yellow" : "red" }')
+          echo "pct=$pct" >> "$GITHUB_OUTPUT"
+          echo "color=$color" >> "$GITHUB_OUTPUT"
+      - name: Publish badge
+        run: |
+          dir=$(mktemp -d)
+          printf '{"schemaVersion":1,"label":"coverage","message":"%s%%","color":"%s"}\n' \
+            "${{ steps.cover.outputs.pct }}" "${{ steps.cover.outputs.color }}" > "$dir/coverage.json"
+          cd "$dir"
+          git init -q -b badges
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add coverage.json
+          git commit -qm "chore: coverage ${{ steps.cover.outputs.pct }}%"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" badges
 
   modules:
     name: ${{ matrix.module }} (Go ${{ matrix.go }})
