@@ -36,5 +36,7 @@ visualize: ## Regenerate docs/img/*.svg
 tidy: ## go mod tidy in every module
 	@for m in $(MODULES); do (cd $$m && go mod tidy) || exit 1; done
 
-compose: ## Run the distributed example with k6
-	docker compose -f examples/distributed/docker-compose.yml up --build --abort-on-container-exit k6
+compose: ## Run the distributed example with k6, then print per-second counts
+	docker compose -f examples/distributed/docker-compose.yml up --build --abort-on-container-exit --exit-code-from k6 k6
+	docker compose -f examples/distributed/docker-compose.yml down
+	examples/distributed/per-second.sh
