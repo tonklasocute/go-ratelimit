@@ -4,6 +4,7 @@ use (
 	.
 	./middleware/chi
 	./middleware/echo
+	./middleware/fiber
 	./middleware/gin
 	./store/redis
 	./store/redis/integration
