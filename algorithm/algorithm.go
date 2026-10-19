@@ -125,6 +125,8 @@ func Peek(id ID, st *State, p Params, now int64, n int64) Decision {
 		return fixedWindowPeek(st, p, now, n)
 	case SlidingLog:
 		return slidingLogPeek(st, p, now, n)
+	case SlidingWindow:
+		return slidingWindowPeek(st, p, now, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
@@ -138,6 +140,8 @@ func Commit(id ID, st *State, p Params, now int64, n int64) {
 		fixedWindowCommit(st, n)
 	case SlidingLog:
 		slidingLogCommit(st, now, n)
+	case SlidingWindow:
+		slidingWindowCommit(st, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
