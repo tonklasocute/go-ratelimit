@@ -1,0 +1,14 @@
+# Build and test output
+/bin/
+*.test
+*.out
+coverage.*
+!coverage.svg
+
+# Workspace sums are machine-specific
+go.work.sum
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
