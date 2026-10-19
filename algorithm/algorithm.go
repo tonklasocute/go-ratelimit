@@ -121,6 +121,8 @@ const eps = 1e-9
 // describe the state after Commit. n must be in [0, Capacity].
 func Peek(id ID, st *State, p Params, now int64, n int64) Decision {
 	switch id {
+	case FixedWindow:
+		return fixedWindowPeek(st, p, now, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
@@ -130,6 +132,8 @@ func Peek(id ID, st *State, p Params, now int64, n int64) Decision {
 // arguments.
 func Commit(id ID, st *State, p Params, now int64, n int64) {
 	switch id {
+	case FixedWindow:
+		fixedWindowCommit(st, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
