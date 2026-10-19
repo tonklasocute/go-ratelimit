@@ -118,6 +118,10 @@ func (r Rule) normalize() (Rule, error) {
 	if r.Burst == 0 || r.Algorithm.Windowed() {
 		r.Burst = r.Rate.Limit
 	}
+	// Bucket algorithms track up to Burst×Period/Limit of time in int64 ns.
+	if float64(r.Burst)*float64(r.Rate.Period)/float64(r.Rate.Limit) > 1<<62 {
+		return r, errors.New("ratelimit: burst is too large for the rate")
+	}
 	if r.Name == "" {
 		r.Name = r.Algorithm.String() + "_" + strconv.Itoa(r.Rate.Limit) + "_" + formatPeriod(r.Rate.Period)
 	}

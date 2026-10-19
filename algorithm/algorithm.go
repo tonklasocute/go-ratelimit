@@ -131,6 +131,8 @@ func Peek(id ID, st *State, p Params, now int64, n int64) Decision {
 		return tokenBucketPeek(st, p, now, n)
 	case LeakyBucket:
 		return leakyBucketPeek(st, p, now, n)
+	case GCRA:
+		return gcraPeek(st, p, now, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}
@@ -150,6 +152,8 @@ func Commit(id ID, st *State, p Params, now int64, n int64) {
 		tokenBucketCommit(st, n)
 	case LeakyBucket:
 		leakyBucketCommit(st, n)
+	case GCRA:
+		gcraCommit(st, p, now, n)
 	default:
 		panic("algorithm: unknown algorithm " + id.String())
 	}

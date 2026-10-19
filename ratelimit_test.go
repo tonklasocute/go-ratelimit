@@ -62,6 +62,7 @@ func TestNewValidation(t *testing.T) {
 		{"zero limit", []ratelimit.Option{ratelimit.PerSecond(0), ratelimit.WithStore(store)}, nil},
 		{"tiny period", []ratelimit.Option{ratelimit.Per(1, time.Nanosecond), ratelimit.WithStore(store)}, nil},
 		{"negative burst", []ratelimit.Option{ratelimit.PerSecond(1), ratelimit.WithBurst(-1), ratelimit.WithStore(store)}, nil},
+		{"burst overflows", []ratelimit.Option{ratelimit.Per(1, 24*time.Hour), ratelimit.WithBurst(1 << 50), ratelimit.WithStore(store)}, nil},
 		{"bad algorithm", []ratelimit.Option{ratelimit.PerSecond(1), ratelimit.WithAlgorithm(99), ratelimit.WithStore(store)}, nil},
 		{"duplicate names", []ratelimit.Option{
 			ratelimit.PerSecond(1), ratelimit.WithStore(store),
